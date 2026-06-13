@@ -1,0 +1,52 @@
+>> TransferLearning3
+Au	2802
+Sp	2658
+
+filterSize =
+
+     5     5
+
+
+numFilters =
+
+    32
+
+
+layers = 
+
+  15x1 Layer array with layers:
+
+     1   ''   Image Input             114x114x3 images with 'zerocenter' normalization
+     2   ''   Convolution             32 5x5x3 convolutions with stride [1  1] and padding [4  4  4  4]
+     3   ''   ReLU                    ReLU
+     4   ''   Max Pooling             5x5 max pooling with stride [2  2] and padding [0  0  0  0]
+     5   ''   Convolution             64 5x5 convolutions with stride [1  1] and padding [4  4  4  4]
+     6   ''   ReLU                    ReLU
+     7   ''   Max Pooling             5x5 max pooling with stride [2  2] and padding [0  0  0  0]
+     8   ''   Convolution             64 5x5 convolutions with stride [1  1] and padding [2  2  2  2]
+     9   ''   ReLU                    ReLU
+    10   ''   Max Pooling             3x3 max pooling with stride [2  2] and padding [0  0  0  0]
+    11   ''   Fully Connected         2 fully connected layer
+    12   ''   ReLU                    ReLU
+    13   ''   Fully Connected         2 fully connected layer
+    14   ''   Softmax                 softmax
+    15   ''   Classification Output   crossentropyex
+Starting parallel pool (parpool) using the 'local' profile ...
+connected to 2 workers.
+Initializing image normalization.
+|========================================================================================|
+|  Epoch  |  Iteration  |  Time Elapsed  |  Mini-batch  |  Mini-batch  |  Base Learning  |
+|         |             |   (hh:mm:ss)   |   Accuracy   |     Loss     |      Rate       |
+|========================================================================================|
+|       1 |           1 |       00:00:01 |       52.00% |       0.6931 |          0.0010 |
+|     100 |        5350 |       00:07:33 |       99.00% |       0.0523 |      1.9531e-06 |
+|     200 |       10750 |       00:15:14 |       99.00% |       0.0523 |      1.9073e-09 |
+|     300 |       16150 |       00:22:54 |       99.00% |       0.0523 |      1.8626e-12 |
+|     400 |       21550 |       00:30:36 |       99.00% |       0.0523 |      1.8190e-15 |
+|     500 |       26950 |       00:38:10 |       99.00% |       0.0523 |      1.7764e-18 |
+|========================================================================================|
+Performance on training set 			0.9786
+We have 96/4368 wrong training classifications
+Performance on validation set 			0.9786
+We have 24/1092 wrong classifications
+>> 

@@ -1,0 +1,158 @@
+==================================================
+ Phase 1 - Testing existing model XONet_r003.mat
+ Date: 11-Jun-2026 22:03:13
+==================================================
+Loaded network (SeriesNetwork). Input size: [114 114 3]. Classes: Au, Sp
+Total images: 10919
+    Label    Count
+    _____    _____
+
+     Au      5598 
+     Sp      5321 
+
+Train images: 8735 | Validation images: 2184
+
+Classifying training set...
+==================================================
+ Phase 1 - Testing existing model XONet_r003.mat
+ Date: 11-Jun-2026 22:04:14
+==================================================
+Loaded network (SeriesNetwork). Input size: [114 114 3]. Classes: Au, Sp
+Total images: 10919
+    Label    Count
+    _____    _____
+
+     Au      5598 
+     Sp      5321 
+
+Train images: 8735 | Validation images: 2184
+
+Classifying training set...
+{Error using matlab.io.datastore.ImageDatastore/read
+Unable to read file: 'D:\Code_Paper3\DCNN_8.22.18\Database\9\Sp\Sp_9_CI_R4-46.jpg'.
+
+Error in nnet.internal.cnn.datastore.ImageDatastoreMiniBatchDatastore/read (line 39)
+            [data,info] = self.imds.read();
+
+Error in augmentedImageDatastore/read (line 315)
+            [input,info] = self.DatastoreInternal.read();
+
+Error in nnet.internal.cnn.dispatcher.MiniBatchDatastoreDispatcher/readData (line 306)
+            [data,info] = read(this.Datastore);
+
+Error in nnet.internal.cnn.dispatcher.MiniBatchDatastoreDispatcher/next (line 179)
+                [miniBatchData, miniBatchResponse] = readData(this);
+
+Error in DAGNetwork/predictBatch>iDoInference (line 148)
+    [X, ~, info] = dispatcher.next();
+
+Error in DAGNetwork/predictBatch (line 98)
+    Y = iDoInference(dispatcher, numObservations, gpuShouldBeUsed, ...
+
+Error in DAGNetwork/calculatePredict (line 16)
+    Y = predictBatch( ...
+
+Error in DAGNetwork/classify (line 199)
+    scores = this.calculatePredict( ...
+
+Error in SeriesNetwork/classify (line 611)
+            [labels, scores] = this.UnderlyingDAGNetwork.classify(X, varargin{:});
+
+Error in Test_Existing_Model (line 56)
+[predTrain, scoreTrain] = classify(net, augTrain, 'MiniBatchSize', 64);
+
+Caused by:
+    Error using matlab.io.datastore.exceptions.decorateCustomFunctionError>generateReadFcnError
+    Error using ReadFcn @readDatastoreImage for file:
+
+        D:\Code_Paper3\DCNN_8.22.18\Database\9\Sp\Sp_9_CI_R4-46.jpg
+
+    Error using readDatastoreImage
+    Unable to determine the file format.
+} 
+==================================================
+ Phase 1 - Testing existing model XONet_r003.mat
+ Date: 11-Jun-2026 22:05:32
+==================================================
+Loaded network (SeriesNetwork). Input size: [114 114 3]. Classes: Au, Sp
+Total images found: 10919
+filterReadable: dropping 10/10919 unreadable image(s):
+   D:\Code_Paper3\DCNN_8.22.18\Database\9\Sp\Sp_9_CI_R4-46.jpg
+   D:\Code_Paper3\DCNN_8.22.18\Database\9\Sp\Sp_9_CI_R4-47.jpg
+   D:\Code_Paper3\DCNN_8.22.18\Database\9\Sp\Sp_9_CI_R4-48.jpg
+   D:\Code_Paper3\DCNN_8.22.18\Database\9\Sp\Sp_9_CI_R4-49.jpg
+   D:\Code_Paper3\DCNN_8.22.18\Database\9\Sp\Sp_9_CI_R4-5.jpg
+   D:\Code_Paper3\DCNN_8.22.18\Database\9\Sp\Sp_9_CI_R4-50.jpg
+   D:\Code_Paper3\DCNN_8.22.18\Database\9\Sp\Sp_9_CI_R4-51.jpg
+   D:\Code_Paper3\DCNN_8.22.18\Database\9\Sp\Sp_9_CI_R4-52.jpg
+   D:\Code_Paper3\DCNN_8.22.18\Database\9\Sp\Sp_9_CI_R4-53.jpg
+   D:\Code_Paper3\DCNN_8.22.18\Database\9\Sp\Sp_9_CI_R4-54.jpg
+Total readable images: 10909
+    Label    Count
+    _____    _____
+
+     Au      5598 
+     Sp      5311 
+
+Train images: 8727 | Validation images: 2182
+
+Classifying training set...
+Classifying validation set...
+{Error using confusionmat
+ORDER must be the same class as G and GHAT.
+
+Error in computeMetrics (line 5)
+    C = confusionmat(yTrue, yPred, 'Order', classNames);
+
+Error in Test_Existing_Model (line 66)
+mTrain = computeMetrics(yTrain, predTrain, classNames);
+} 
+==================================================
+ Phase 1 - Testing existing model XONet_r003.mat
+ Date: 11-Jun-2026 22:06:54
+==================================================
+Loaded network (SeriesNetwork). Input size: [114 114 3]. Classes: Au, Sp
+Total images found: 10919
+filterReadable: dropping 10/10919 unreadable image(s):
+   D:\Code_Paper3\DCNN_8.22.18\Database\9\Sp\Sp_9_CI_R4-46.jpg
+   D:\Code_Paper3\DCNN_8.22.18\Database\9\Sp\Sp_9_CI_R4-47.jpg
+   D:\Code_Paper3\DCNN_8.22.18\Database\9\Sp\Sp_9_CI_R4-48.jpg
+   D:\Code_Paper3\DCNN_8.22.18\Database\9\Sp\Sp_9_CI_R4-49.jpg
+   D:\Code_Paper3\DCNN_8.22.18\Database\9\Sp\Sp_9_CI_R4-5.jpg
+   D:\Code_Paper3\DCNN_8.22.18\Database\9\Sp\Sp_9_CI_R4-50.jpg
+   D:\Code_Paper3\DCNN_8.22.18\Database\9\Sp\Sp_9_CI_R4-51.jpg
+   D:\Code_Paper3\DCNN_8.22.18\Database\9\Sp\Sp_9_CI_R4-52.jpg
+   D:\Code_Paper3\DCNN_8.22.18\Database\9\Sp\Sp_9_CI_R4-53.jpg
+   D:\Code_Paper3\DCNN_8.22.18\Database\9\Sp\Sp_9_CI_R4-54.jpg
+Total readable images: 10909
+    Label    Count
+    _____    _____
+
+     Au      5598 
+     Sp      5311 
+
+Train images: 8727 | Validation images: 2182
+
+Classifying training set...
+Classifying validation set...
+
+----- TRAINING SET -----
+Accuracy: 0.9880
+Class       Precision     Recall         F1  Support
+Au             0.9888     0.9877     0.9883     4478
+Sp             0.9871     0.9882     0.9877     4249
+Macro          0.9879     0.9880     0.9880
+Weighted       0.9880     0.9880     0.9880
+
+----- VALIDATION SET -----
+Accuracy: 0.9849
+Class       Precision     Recall         F1  Support
+Au             0.9892     0.9812     0.9852     1120
+Sp             0.9804     0.9887     0.9845     1062
+Macro          0.9848     0.9850     0.9849
+Weighted       0.9849     0.9849     0.9849
+
+AUC  - Validation: 0.9909 | Training: 0.9948  (positive class = Sp)
+
+All Phase-1 outputs saved to: D:\Code_Paper3\DCNN_8.22.18\Results\Existing_Model
+DONE_TEST_EXISTING

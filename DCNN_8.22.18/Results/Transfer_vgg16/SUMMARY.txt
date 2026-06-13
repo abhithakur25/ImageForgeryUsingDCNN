@@ -1,0 +1,23 @@
+METRICS SUMMARY - Transfer vgg16
+Generated: 13-Jun-2026 05:01:41
+
+[TRAINING SET]
+  Accuracy           : 0.9807
+  Macro Precision    : 0.9808
+  Macro Recall       : 0.9807
+  Macro F1           : 0.9807
+  Weighted Precision : 0.9808
+  Weighted Recall    : 0.9807
+  Weighted F1        : 0.9807
+  AUC (Sp)           : 0.9985
+
+[VALIDATION SET]
+  Accuracy           : 0.9533
+  Macro Precision    : 0.9532
+  Macro Recall       : 0.9535
+  Macro F1           : 0.9532
+  Weighted Precision : 0.9535
+  Weighted Recall    : 0.9533
+  Weighted F1        : 0.9533
+  AUC (Sp)           : 0.9928
+

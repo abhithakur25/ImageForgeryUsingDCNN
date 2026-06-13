@@ -1,0 +1,49 @@
+
+>> TransferLearning3
+Au	86508
+Sp	32028
+
+filterSize =
+
+     5     5
+
+
+numFilters =
+
+    32
+
+
+layers = 
+
+  15x1 Layer array with layers:
+
+     1   ''   Image Input             114x114x3 images with 'zerocenter' normalization
+     2   ''   Convolution             32 5x5x3 convolutions with stride [1  1] and padding [4  4  4  4]
+     3   ''   ReLU                    ReLU
+     4   ''   Max Pooling             5x5 max pooling with stride [2  2] and padding [0  0  0  0]
+     5   ''   Convolution             64 5x5 convolutions with stride [1  1] and padding [4  4  4  4]
+     6   ''   ReLU                    ReLU
+     7   ''   Max Pooling             5x5 max pooling with stride [2  2] and padding [0  0  0  0]
+     8   ''   Convolution             64 5x5 convolutions with stride [1  1] and padding [2  2  2  2]
+     9   ''   ReLU                    ReLU
+    10   ''   Max Pooling             3x3 max pooling with stride [2  2] and padding [0  0  0  0]
+    11   ''   Fully Connected         2 fully connected layer
+    12   ''   ReLU                    ReLU
+    13   ''   Fully Connected         2 fully connected layer
+    14   ''   Softmax                 softmax
+    15   ''   Classification Output   crossentropyex
+Starting parallel pool (parpool) using the 'local' profile ...
+connected to 2 workers.
+Initializing image normalization.
+|       1 |           1 |       00:00:01 |       73.00% |       0.6931 |          0.0010 |
+|     100 |      117350 |       02:43:39 |       99.00% |       0.0561 |      1.9531e-06 |
+|     200 |      235850 |       05:28:23 |       99.00% |       0.0556 |      1.9073e-09 |
+|     300 |      354350 |       08:13:33 |       99.00% |       0.0556 |      1.8626e-12 |
+|     400 |      472850 |       10:58:07 |       99.00% |       0.0556 |      1.8190e-15 |
+|     500 |      592450 |       13:44:39 |      100.00% |       0.0172 |      1.7764e-18 |
+
+Performance on training set 			0.9923
+We have 887/94828 wrong training classifications
+Performance on validation set 			0.9929
+We have 210/23708 wrong classifications
+>> 

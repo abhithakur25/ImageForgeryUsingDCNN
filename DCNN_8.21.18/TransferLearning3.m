@@ -1,0 +1,212 @@
+doTraining = false;
+show.wrong_classified = true;
+close all;
+load('XONet_r002.mat')
+net = XONet;
+% layers = net.Layers
+
+% layers(11)= fullyConnectedLayer(2);
+% layers(13)= classificationLayer
+
+IMDS = imageDatastore('C:\Users\abhit\OneDrive\Documents\MATLAB\DCNN\DCNN_NEW\Database\','IncludeSubfolders',true,'FileExtensions','.jpg','LabelSource','foldernames'); % use imageDatastore for loading the two image categories
+
+example_image = readimage(IMDS,1);                      % read one example image
+numChannels = size(example_image,3);                    % get color information
+numImageCategories = size(categories(IMDS.Labels),1);   % get category labels
+[trainingDS,validationDS] = splitEachLabel(IMDS,0.8,'randomize'); % generate training and validation set
+LabelCnt = countEachLabel(IMDS);                        % load lable information
+for cats=1:numImageCategories                           % print out how many images we have for each category
+    fprintf('%s\t%d\n',LabelCnt.Label(cats),LabelCnt.Count(cats));
+end
+
+if doTraining
+%% Setup of the CNN
+    % Convolutional layer parameters
+    filterSize = [5 5]
+    numFilters = 32
+    
+    inputLayer = imageInputLayer(size(example_image));  % input layer with no data augmentation
+    
+    middleLayers = [
+        convolution2dLayer(filterSize, numFilters, 'Padding', 4)
+        reluLayer()
+        maxPooling2dLayer(5, 'Stride', 2)
+        convolution2dLayer(filterSize, numFilters*2, 'Padding', 4)
+        reluLayer()
+        maxPooling2dLayer(5, 'Stride',2)
+        convolution2dLayer(filterSize, 2 * numFilters, 'Padding', 2)
+        reluLayer()
+        maxPooling2dLayer(3, 'Stride',2)];
+        
+    
+    finalLayers = [
+                    fullyConnectedLayer(numImageCategories)
+                    softmaxLayer
+                    classificationLayer
+        
+                   ];
+    
+    layers = [
+        inputLayer
+        middleLayers
+        finalLayers
+        ];
+    
+    %Initialize the first convolutional layer weights using normally distributed random numbers with standard deviation of 0.0001. This helps improve the convergence of training.
+    layers(2).Weights = 0.0001 * randn([filterSize numChannels numFilters]);
+    
+    layers = layers(1:end-3);% Set the network training options end-3);
+
+layers(end+1) = fullyConnectedLayer(numImageCategories);
+layers(end+1) = reluLayer;
+layers(end+1) = fullyConnectedLayer(numImageCategories);
+layers(end+1) = softmaxLayer;
+layers(end+1) = classificationLayer()
+
+
+layers(end-2).WeightLearnRateFactor = 10;
+layers(end-2).WeightL2Factor = 1;
+layers(end-2).BiasLearnRateFactor = 20;
+layers(end-2).BiasL2Factor = 0;
+
+
+opts = trainingOptions('sgdm', ...
+        'Momentum', 0.9, ...
+        'InitialLearnRate', 0.001, ...
+        'LearnRateSchedule', 'piecewise', ...
+        'LearnRateDropFactor', 0.5, ...
+        'LearnRateDropPeriod', 10, ...
+        'L2Regularization', 0.004, ...
+        'MaxEpochs', 500, ...         % 10 for Quadro 
+        'MiniBatchSize', 100, ...    % 64 for Quadro 
+        'Verbose', true,'ExecutionEnvironment','multi-gpu','Plots','training-progress');
+
+    
+    
+    % Train a network.
+%%
+        rng('default');
+    rng(123); % random seed
+    XONet = trainNetwork(IMDS, layers, opts);
+    save('XONet_r003.mat','XONet');
+   
+else
+        % Load pre-trained detector for the example.
+        load('XONet_r003.mat');
+   end
+
+%% test the performance
+% test network performance on training set
+[labels1,~] = classify(XONet, trainingDS, 'MiniBatchSize', 20);
+confMat1 = confusionmat(trainingDS.Labels, labels1);
+confMat1 = bsxfun(@rdivide,confMat1,sum(confMat1,2));
+fprintf('Performance on training set \t\t\t%.4f\n',mean(diag(confMat1)));
+% % Find wrong classified examples
+    idx3 = find(trainingDS.Labels~=labels1);
+    idx4 = int16(rand(length(idx3),1)*size(labels1,1));
+    fprintf('We have %d/%d wrong training classifications\n',length(idx3),size(labels1,1));
+%% test network performance on validation set
+[labels,~] = classify(XONet, validationDS, 'MiniBatchSize', 20);
+confMat = confusionmat(validationDS.Labels, labels);
+confMat = bsxfun(@rdivide,confMat,sum(confMat,2));
+fprintf('Performance on validation set \t\t\t%.4f\n',mean(diag(confMat)));
+% Find wrong classified examples
+    idx = find(validationDS.Labels~=labels);
+    idx2 = int16(rand(length(idx),1)*size(labels,1));
+    fprintf('We have %d/%d wrong classifications\n',length(idx),size(labels,1));
+%%
+% if show.wrong_classified
+%     % % Find wrong classified examples
+%     idx = find(validationDS.Labels~=labels);
+%     idx2 = int16(rand(length(idx),1)*size(labels,1));
+%     fprintf('We have %d/%d wrong classifications\n',length(idx),size(labels,1));
+%     
+%     
+%         for jj = 9:9
+%         %%
+%         img = readimage(validationDS,idx(jj));
+%         imwrite(img, 'im1.jpg');
+%         folder = 'F:\College\Abhishek\DCNN_NEW';
+%         baseFileName = 'im1.jpg';
+% %         deconvolution(folder,baseFileName, idx,jj, labels);
+%         end   
+%        
+%             %%
+%         for jj = 9197:9198
+%         img2 = readimage(validationDS,idx2(jj));
+%         imwrite(img2, 'im2.jpg');
+%         folder = 'F:\College\Abhishek\DCNN_NEW';
+%         baseFileName = 'im2.jpg';
+% %         deconvolution(folder,baseFileName, idx2,jj, labels);
+%         
+%         end
+%  end
+%     %%
+%     %% plot correct classsified images
+% if show.wrong_classified
+%     %Find wrigh classification
+%     idx3 = find(validationDS.Labels==labels);
+%     idx4 = int16(rand(length(idx3),1)*size(labels,1));
+%     fprintf('We have %d/%d correct classifications\n',length(idx3),size(labels,1));
+%     %%
+%     for jj = 37037:37038
+%         img = readimage(validationDS,idx3(jj));
+%         imwrite(img, 'im1.jpg');
+%         folder = 'F:\College\Abhishek\DCNN_NEW';
+%         baseFileName = 'im1.jpg';
+% %         deconvolution(folder,baseFileName, idx3,jj, labels);
+%     end
+%         %%
+%         for jj = 6836:6836
+%                 img = readimage(validationDS,idx4(jj));
+%         imwrite(img, 'im2.jpg');
+%         folder = 'F:\College\Abhishek\DCNN_NEW';
+%         baseFileName = 'im2.jpg';
+% %         deconvolution(folder,baseFileName, idx4,jj, labels);        
+%         end
+% 
+% end
+% % testDS = imageDatastore('F:\College\Abhishek\DCNN_NEW\Database\','IncludeSubfolders',true,'FileExtensions','.jpg','LabelSource','foldernames'); % use imageDatastore for loading the two image categories
+% % [labels,err_test] = classify(XONet, testDS, 'MiniBatchSize', 60);
+% % confMat = confusionmat(testDS.Labels, labels);
+% % confMat = confMat./sum(confMat,2);
+% % mean(diag(confMat))
+
+%% test the performance
+% test network performance on validation set
+save('valid_trainDS.mat','valid_trainDS');
+load('valid_trainDS.mat');
+[labels,~] = classify(train_new, valid_trainDS, 'MiniBatchSize', 128);
+confMat = confusionmat(valid_trainDS.Labels, labels);
+confMat = bsxfun(@rdivide,confMat,sum(confMat,2));
+fprintf('Performance on validation set \t\t\t%.4f\n',mean(diag(confMat)));
+  
+%% plot true classsified 
+    % % Find classified examples
+     idx = find(valid_trainDS.Labels==labels);
+% idx=319;
+%     idx2 = randi(length(idx),1)*size(labels,1);
+ idx2 = find(valid_trainDS.Labels~=labels);
+%     fprintf('We have %d/%d true classifications\n',length(idx),size(labels,1));
+    for jj = 1:length(idx)
+        img = readimage(valid_trainDS,idx(jj));
+        imwrite(img, 'im1.jpg');
+        im1=imread('im1.jpg');
+        figure,
+         subplot(1,2,1);
+        imagesc(im1);
+%         imshow(im1);
+        lab = sprintf('classified as forged',labels(idx(jj)));
+        title(lab,'Color','Red');
+        img = readimage(valid_trainDS,idx2(jj));
+        imwrite(img, 'im2.jpg');
+        im2=imread('im2.jpg');
+         subplot(1,2,2);
+% figure()
+        imagesc(im2);
+%         imshow(im2)
+        lab = sprintf('classified as authentic',labels(idx2(jj)));
+        title(lab,'Color','Green');
+ saveas(figure(jj),fullfile('E:\Harpreet Kaur\results',['figure' num2str(jj) '.png']));
+    end
+end

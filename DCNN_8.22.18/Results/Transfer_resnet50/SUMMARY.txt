@@ -1,0 +1,23 @@
+METRICS SUMMARY - Transfer resnet50
+Generated: 12-Jun-2026 20:14:50
+
+[TRAINING SET]
+  Accuracy           : 0.9986
+  Macro Precision    : 0.9986
+  Macro Recall       : 0.9986
+  Macro F1           : 0.9986
+  Weighted Precision : 0.9986
+  Weighted Recall    : 0.9986
+  Weighted F1        : 0.9986
+  AUC (Sp)           : 1.0000
+
+[VALIDATION SET]
+  Accuracy           : 0.9940
+  Macro Precision    : 0.9940
+  Macro Recall       : 0.9941
+  Macro F1           : 0.9940
+  Weighted Precision : 0.9940
+  Weighted Recall    : 0.9940
+  Weighted F1        : 0.9940
+  AUC (Sp)           : 0.9999
+

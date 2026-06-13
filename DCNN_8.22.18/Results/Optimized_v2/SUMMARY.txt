@@ -1,0 +1,23 @@
+METRICS SUMMARY - Optimized v2
+Generated: 11-Jun-2026 22:30:39
+
+[TRAINING SET]
+  Accuracy           : 0.5131
+  Macro Precision    : 0.2566
+  Macro Recall       : 0.5000
+  Macro F1           : 0.3391
+  Weighted Precision : 0.2633
+  Weighted Recall    : 0.5131
+  Weighted F1        : 0.3480
+  AUC (Sp)           : 0.5000
+
+[VALIDATION SET]
+  Accuracy           : 0.5133
+  Macro Precision    : 0.2566
+  Macro Recall       : 0.5000
+  Macro F1           : 0.3392
+  Weighted Precision : 0.2635
+  Weighted Recall    : 0.5133
+  Weighted F1        : 0.3482
+  AUC (Sp)           : 0.5000
+

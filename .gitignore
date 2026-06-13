@@ -1,0 +1,18 @@
+# Trained network weights — large binaries (vgg16 478MB, alexnet 204MB exceed
+# GitHub's 100MB file limit) and fully regenerable by re-running the training scripts.
+net_*.mat
+
+# Redundant / raw image-dataset dumps. The active CASIA Au/Sp split that the
+# pipeline trains on lives in DCNN_8.22.18/Database/ and IS tracked.
+/Database/
+/DCNN_8.21.18/Database/
+
+# Reference material, not project code.
+*.rar
+*.pdf
+
+# OS / editor cruft
+Thumbs.db
+desktop.ini
+*.asv
+~$*

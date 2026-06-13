@@ -1,0 +1,23 @@
+METRICS SUMMARY - Transfer alexnet
+Generated: 12-Jun-2026 20:38:42
+
+[TRAINING SET]
+  Accuracy           : 0.9881
+  Macro Precision    : 0.9881
+  Macro Recall       : 0.9880
+  Macro F1           : 0.9881
+  Weighted Precision : 0.9881
+  Weighted Recall    : 0.9881
+  Weighted F1        : 0.9881
+  AUC (Sp)           : 0.9996
+
+[VALIDATION SET]
+  Accuracy           : 0.9748
+  Macro Precision    : 0.9749
+  Macro Recall       : 0.9747
+  Macro F1           : 0.9748
+  Weighted Precision : 0.9748
+  Weighted Recall    : 0.9748
+  Weighted F1        : 0.9748
+  AUC (Sp)           : 0.9975
+

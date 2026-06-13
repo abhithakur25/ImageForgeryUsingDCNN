@@ -1,0 +1,23 @@
+METRICS SUMMARY - XONet_r003.mat (existing model)
+Generated: 11-Jun-2026 22:07:29
+
+[TRAINING SET]
+  Accuracy           : 0.9880
+  Macro Precision    : 0.9879
+  Macro Recall       : 0.9880
+  Macro F1           : 0.9880
+  Weighted Precision : 0.9880
+  Weighted Recall    : 0.9880
+  Weighted F1        : 0.9880
+  AUC (Sp)           : 0.9948
+
+[VALIDATION SET]
+  Accuracy           : 0.9849
+  Macro Precision    : 0.9848
+  Macro Recall       : 0.9850
+  Macro F1           : 0.9849
+  Weighted Precision : 0.9849
+  Weighted Recall    : 0.9849
+  Weighted F1        : 0.9849
+  AUC (Sp)           : 0.9909
+

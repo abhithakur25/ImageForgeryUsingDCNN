@@ -1,0 +1,12 @@
+﻿DCNN transfer-learning execution queue
+updated : 05:01:52   elapsed 10:07:44
+
+OVERALL  [########################################]  100%   job 3/3
+CURRENT  [########################################]  100%   vgg16  (done)
+
+queue:
+  [x] resnet50
+  [x] alexnet
+  [>] vgg16
+
+=== queue finished in 10:07:44 ===

@@ -1,0 +1,23 @@
+METRICS SUMMARY - Transfer squeezenet
+Generated: 11-Jun-2026 22:24:36
+
+[TRAINING SET]
+  Accuracy           : 0.8856
+  Macro Precision    : 0.8864
+  Macro Recall       : 0.8863
+  Macro F1           : 0.8856
+  Weighted Precision : 0.8870
+  Weighted Recall    : 0.8856
+  Weighted F1        : 0.8856
+  AUC (Sp)           : 0.9671
+
+[VALIDATION SET]
+  Accuracy           : 0.8607
+  Macro Precision    : 0.8614
+  Macro Recall       : 0.8613
+  Macro F1           : 0.8607
+  Weighted Precision : 0.8621
+  Weighted Recall    : 0.8607
+  Weighted F1        : 0.8607
+  AUC (Sp)           : 0.9496
+

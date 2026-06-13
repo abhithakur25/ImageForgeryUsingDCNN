@@ -180,29 +180,107 @@ The full 3-job sweep (resnet50 + alexnet + vgg16) driven by `run_queue.ps1` took
 
 ## 9. Comparison & results
 
-Honest held-out validation, fixed `rng(123)` 80/20 split, sorted by validation accuracy
-(source: `Results\COMPARISON.txt`):
+All numbers are **honest, held-out validation** results (fixed `rng(123)` 80/20 split — the
+model never saw these images during training). Every model has its own folder under
+`Results\`. The discussion below follows the actual development order: first the
+**optimization iterations** (from-scratch CNNs in the `Optimized_*` folders), then the
+**transfer-learning models**, then the **overall ranking** and the **best model**.
 
-| Model | Train Acc | **Val Acc** | Val Precision | Val Recall | Val F1 | Val AUC |
-|---|:---:|:---:|:---:|:---:|:---:|:---:|
-| **Transfer_resnet50** | 0.9986 | **0.9940** | 0.9940 | 0.9941 | 0.9940 | 0.9999 |
-| Transfer_resnet18 | 0.9985 | 0.9881 | 0.9881 | 0.9881 | 0.9881 | 0.9996 |
-| Existing_Model (XONet)¹ | 0.9880 | 0.9849 | 0.9848 | 0.9850 | 0.9849 | 0.9909 |
-| Transfer_alexnet | 0.9881 | 0.9748 | 0.9749 | 0.9747 | 0.9748 | 0.9975 |
-| Transfer_vgg16 | 0.9807 | 0.9533 | 0.9532 | 0.9535 | 0.9532 | 0.9928 |
-| Transfer_squeezenet_best | 0.9622 | 0.9358 | 0.9358 | 0.9361 | 0.9358 | 0.9893 |
-| Transfer_squeezenet_long | 0.9290 | 0.9138 | 0.9139 | 0.9142 | 0.9138 | 0.9797 |
-| Transfer_squeezenet | 0.8856 | 0.8607 | 0.8614 | 0.8613 | 0.8607 | 0.9496 |
-| Optimized_v1 (scratch) | 0.8077 | 0.7741 | 0.7743 | 0.7734 | 0.7736 | 0.8678 |
-| Optimized_v3 (scratch) | 0.8067 | 0.7699 | 0.7726 | 0.7685 | 0.7686 | 0.8631 |
-| Optimized_v2 (scratch)² | 0.5131 | 0.5133 | 0.2566 | 0.5000 | 0.3392 | 0.5000 |
+### 9.1 Optimization iterations (from-scratch CNNs — `Results\Optimized_*`)
 
-¹ In-sample / optimistic — see §10. ² Collapsed to one class (learning rate too high).
+These are the custom networks trained from random initialisation. Each version changed one
+or more design choices to fix the previous version's weakness. (There are three iterations —
+v1, v2, v3; there is no v4.)
 
-**Best model: `Transfer_resnet50` — 99.40% validation accuracy, F1 0.9940, AUC 0.9999**,
-measured honestly on held-out data. The progression across iterations
-(77% scratch → 86% → 91% → 93.6% squeezenet → 98.8% resnet18 → **99.4% resnet50**) shows that
-pretrained features plus light, forgery-safe augmentation decisively win.
+| Version (folder) | Script | Key configuration | Train Acc | Val Acc | Val F1 | Val AUC |
+|---|---|---|:---:|:---:|:---:|:---:|
+| **Optimized_v1** | `Train_Optimized.m` | BN CNN (32-64-128-128) + Global-Avg-Pool + dropout 0.5; **aggressive** aug (rotation ±10°, shift ±6); Adam LR 1e-3; 30 ep | 0.8077 | 0.7741 | 0.7736 | 0.8678 |
+| **Optimized_v2** | `Train_CustomV2.m` | Deeper CNN (32-64-128-256) + **FC head (256)**; light flip aug; Adam LR 1e-3; 40 ep | 0.5131 | 0.5133 | 0.3392 | 0.5000 |
+| **Optimized_v3** | `Train_CustomV3.m` | Same deeper CNN (FC head 128); light flip aug; **LR 3e-4 + gradient clipping**; 40 ep | 0.8067 | 0.7699 | 0.7686 | 0.8631 |
+
+**What happened, version by version:**
+- **v1 — baseline from scratch (77.4%).** Underfit. Two causes: (a) the aggressive geometric
+  augmentation (rotation/large shifts) blurs the fragile splicing cues, and (b) the
+  global-average-pooling head throws away the spatial detail those cues live in.
+- **v2 — deeper + FC head, but it collapsed (51.3%).** The learning rate (1e-3) was too high
+  for the BatchNorm + fully-connected stack: the validation loss diverged and the network
+  settled into predicting a single class (precision 0.2566, AUC 0.5000 = random). This is the
+  classic "model predicts everything as one class" failure.
+- **v3 — stabilised (77.0%).** Same architecture as v2 but with a lower learning rate (3e-4)
+  and gradient clipping. Training was now stable and well-behaved, but accuracy **plateaued at
+  ~77%** — essentially the same ceiling as v1. This is the practical limit of a from-scratch
+  CNN on a dataset of this size.
+
+**Conclusion of the optimization phase:** tuning a from-scratch network (architecture depth,
+augmentation, learning rate, regularisation) could *stabilise* training but could **not** push
+held-out accuracy past ~77%. The dataset is too small to learn strong low-level features from
+random weights — which is exactly what motivated moving to **transfer learning**.
+
+### 9.2 Transfer-learning models (`Results\Transfer_*`)
+
+Fine-tuning an ImageNet-pretrained backbone broke through the from-scratch ceiling. The
+SqueezeNet runs show the effect of longer training and a learning-rate schedule; the larger
+backbones then pushed accuracy toward the high-90s.
+
+| Model (folder) | Backbone | Epochs | Train Acc | Val Acc | Val F1 | Val AUC |
+|---|---|:---:|:---:|:---:|:---:|:---:|
+| Transfer_squeezenet | SqueezeNet | 12 | 0.8856 | 0.8607 | 0.8607 | 0.9496 |
+| Transfer_squeezenet_long | SqueezeNet | 25 | 0.9290 | 0.9138 | 0.9138 | 0.9797 |
+| Transfer_squeezenet_best | SqueezeNet | 35 | 0.9622 | 0.9358 | 0.9358 | 0.9893 |
+| Transfer_vgg16 | VGG-16 | 30 | 0.9807 | 0.9533 | 0.9532 | 0.9928 |
+| Transfer_alexnet | AlexNet | 30 | 0.9881 | 0.9748 | 0.9748 | 0.9975 |
+| Transfer_resnet18 | ResNet-18 | 30 | 0.9985 | 0.9881 | 0.9881 | 0.9996 |
+| **Transfer_resnet50** | **ResNet-50** | 30 | 0.9986 | **0.9940** | **0.9940** | **0.9999** |
+
+### 9.3 Overall ranking (all models, by validation accuracy)
+
+Source: `Results\COMPARISON.txt`.
+
+| Rank | Model | Train Acc | **Val Acc** | Val Precision | Val Recall | Val F1 | Val AUC |
+|:--:|---|:---:|:---:|:---:|:---:|:---:|:---:|
+| 1 | **Transfer_resnet50** | 0.9986 | **0.9940** | 0.9940 | 0.9941 | 0.9940 | 0.9999 |
+| 2 | Transfer_resnet18 | 0.9985 | 0.9881 | 0.9881 | 0.9881 | 0.9881 | 0.9996 |
+| 3 | Existing_Model (XONet)¹ | 0.9880 | 0.9849 | 0.9848 | 0.9850 | 0.9849 | 0.9909 |
+| 4 | Transfer_alexnet | 0.9881 | 0.9748 | 0.9749 | 0.9747 | 0.9748 | 0.9975 |
+| 5 | Transfer_vgg16 | 0.9807 | 0.9533 | 0.9532 | 0.9535 | 0.9532 | 0.9928 |
+| 6 | Transfer_squeezenet_best | 0.9622 | 0.9358 | 0.9358 | 0.9361 | 0.9358 | 0.9893 |
+| 7 | Transfer_squeezenet_long | 0.9290 | 0.9138 | 0.9139 | 0.9142 | 0.9138 | 0.9797 |
+| 8 | Transfer_squeezenet | 0.8856 | 0.8607 | 0.8614 | 0.8613 | 0.8607 | 0.9496 |
+| 9 | Optimized_v1 (scratch) | 0.8077 | 0.7741 | 0.7743 | 0.7734 | 0.7736 | 0.8678 |
+| 10 | Optimized_v3 (scratch) | 0.8067 | 0.7699 | 0.7726 | 0.7685 | 0.7686 | 0.8631 |
+| 11 | Optimized_v2 (scratch)² | 0.5131 | 0.5133 | 0.2566 | 0.5000 | 0.3392 | 0.5000 |
+
+¹ In-sample / optimistic — see §10, not directly comparable. ² Collapsed to one class.
+
+### 9.4 Best model and why
+
+**The best model is `Transfer_resnet50` (ResNet-50, 30 epochs).**
+
+| Metric | Value |
+|---|---|
+| Validation accuracy | **0.9940** (99.40%) |
+| Validation F1 | 0.9940 |
+| Validation AUC | 0.9999 |
+| Train accuracy | 0.9986 |
+
+It is the best for four concrete reasons:
+1. **Highest score on every honest metric** — top validation accuracy, precision, recall, F1
+   and AUC of all eleven models, and the only one to clear 99%.
+2. **It generalises, not memorises** — the train→val gap is tiny (0.9986 → 0.9940, ~0.5%),
+   so it is not overfitting; the near-perfect AUC of 0.9999 means the two classes are almost
+   perfectly separable by its score.
+3. **Better trade-off than the alternatives** — VGG-16 has far more parameters yet scored
+   lower (0.9533) and took ~8 h to train; ResNet-50's residual connections let it train a deep
+   network stably in ~1 h 18 m and still win. ResNet-18 is the close runner-up (0.9881) and is
+   the lighter choice if model size/speed matters.
+4. **It is the honest peak of the whole journey** — 77% (scratch v1/v3) → 51% collapse (v2) →
+   86% → 91% → 93.6% (SqueezeNet) → 97.5% (AlexNet) → 98.8% (ResNet-18) → **99.4% (ResNet-50)**.
+   Every step up came from a deliberate fix, and ResNet-50 is the end point.
+
+> Note: the existing `XONet` baseline shows 98.49%, but that number is *optimistic* because it
+> was measured partly on images the model trained on (see §10). On a like-for-like honest
+> basis, `Transfer_resnet50` is the strongest and most trustworthy model and is the one to use
+> and report.
 
 ## 10. Methodology note (data leakage)
 

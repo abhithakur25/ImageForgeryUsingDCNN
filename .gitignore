@@ -1,6 +1,8 @@
-# Trained network weights — large binaries (vgg16 478MB, alexnet 204MB exceed
-# GitHub's 100MB file limit) and fully regenerable by re-running the training scripts.
-net_*.mat
+# Trained network weights that exceed GitHub's 100MB per-file limit.
+# Smaller models (resnet50 86MB, resnet18 41MB, squeezenet 3MB) ARE tracked.
+# vgg16 (478MB) and alexnet (204MB) are regenerable via run_queue.ps1 / Train_Transfer.
+DCNN_8.22.18/Results/Transfer_vgg16/net_vgg16.mat
+DCNN_8.22.18/Results/Transfer_alexnet/net_alexnet.mat
 
 # Redundant / raw image-dataset dumps. The active CASIA Au/Sp split that the
 # pipeline trains on lives in DCNN_8.22.18/Database/ and IS tracked.

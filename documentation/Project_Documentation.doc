@@ -1,0 +1,147 @@
+<html xmlns:o="urn:schemas-microsoft-com:office:office"
+      xmlns:w="urn:schemas-microsoft-com:office:word"
+      xmlns="http://www.w3.org/TR/REC-html40">
+<head>
+<meta charset="utf-8">
+<title>Image Forgery Detection using DCNN - Project Documentation</title>
+<!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View><w:Zoom>100</w:Zoom></w:WordDocument></xml><![endif]-->
+<style>
+ @page { size: 21cm 29.7cm; margin: 2.2cm 2.2cm; }
+ body { font-family: "Calibri", sans-serif; font-size: 11.5pt; line-height: 1.35; color:#1a1a1a; }
+ h1 { font-size: 20pt; color:#1f3864; margin-bottom:2pt; }
+ h2 { font-size: 13.5pt; color:#2e5496; border-bottom:1px solid #b9c6e0; padding-bottom:2pt; margin-top:14pt; }
+ .sub { color:#555; font-size:10pt; margin-top:0; }
+ table { border-collapse: collapse; width:100%; font-size:10pt; margin:6pt 0; }
+ th,td { border:1px solid #9bb0d4; padding:3pt 6pt; text-align:left; }
+ th { background:#dde6f5; }
+ code { font-family:"Consolas",monospace; background:#f2f4f8; padding:0 2pt; }
+ .best { font-weight:bold; }
+</style>
+</head>
+<body>
+
+<h1>Image Forgery Detection using a Deep Convolutional Neural Network</h1>
+<p class="sub">Project Documentation &middot; CASIA dataset &middot; Binary classification (Authentic vs Spliced) &middot; MATLAB R2022b</p>
+
+<h2>1. Introduction</h2>
+<p>Digital images are now the primary medium through which information is shared, yet the same
+editing tools that make images easy to create also make them easy to manipulate. <b>Image
+splicing</b> &mdash; cutting a region from one photograph and pasting it into another &mdash; is
+among the most common and most damaging forms of forgery, because a convincingly spliced image
+can mislead viewers, distort evidence, and spread misinformation. The artefacts left behind by
+splicing (irregular object boundaries, inconsistent sensor noise, and mismatched
+colour-illumination) are often invisible to the human eye but are statistically detectable. This
+makes the problem an excellent fit for <b>deep convolutional neural networks (DCNNs)</b>, which
+learn discriminative features directly from raw pixels rather than relying on hand-crafted rules.</p>
+
+<p>This project builds a complete, reproducible pipeline that detects spliced images in the
+<b>CASIA forgery dataset</b>, treating the task as <b>binary classification</b> between two
+classes: <code>Au</code> (authentic) and <code>Sp</code> (spliced). The work began from an
+existing research script that trained a small custom network and reported roughly 98.5% accuracy.
+On close inspection, that figure was found to be unreliable: the script validated the model on the
+very images it had been trained on, so the number measured memorisation rather than the ability to
+generalise to unseen images. The central goal of this documentation, and of the code it describes,
+is to replace that flawed methodology with an honest, rigorously evaluated system, and to benchmark
+several modern network architectures so that a trustworthy best model can be recommended.</p>
+
+<h2>2. The Dataset and Pre-processing</h2>
+<p>The dataset contains <b>10,919 colour images</b>, each resized to <b>114 &times; 114 &times; 3</b>
+pixels and organised across eleven numbered folders, every one of which holds an <code>Au</code>
+and an <code>Sp</code> subfolder. Class labels are inferred automatically from these folder names
+using MATLAB's <code>imageDatastore</code>. Ten files in one folder are corrupt and crash the image
+reader; a dedicated helper, <code>filterReadable.m</code>, performs a fast header check on every file
+and silently discards the unreadable ones, leaving <b>10,909 usable images</b> &mdash; 5,598 authentic
+and 5,311 spliced, a well balanced split.</p>
+
+<p>The data is divided into <b>80% training and 20% validation</b> using a fixed random seed
+(<code>rng(123)</code>). Fixing the seed is important: it guarantees that every model is trained and
+tested on exactly the same partition, so differences in their scores reflect the models themselves and
+not lucky or unlucky splits. Data augmentation is applied during training, but only <b>horizontal and
+vertical flips together with small pixel translations</b>. Rotation and scaling are deliberately
+excluded, because the interpolation they introduce smooths over the subtle, high-frequency cues that
+distinguish a spliced region from an authentic one &mdash; aggressive geometric augmentation was found
+to actively hurt performance.</p>
+
+<h2>3. How the Code Works</h2>
+<p>The pipeline is organised into two phases plus an aggregation step, all written as small, focused
+MATLAB scripts that share a common set of evaluation helpers.</p>
+<p><b>Phase 1 &mdash; testing the existing model.</b> <code>Test_Existing_Model.m</code> loads the
+original trained network (<code>XONet_r003.mat</code>) and evaluates it <i>without retraining</i>. It
+builds the datastore, applies the fixed split, classifies both the training and validation sets, and
+produces the complete metric suite. This establishes the baseline.</p>
+<p><b>Phase 2 &mdash; training new models.</b> <code>Train_Transfer.m</code> fine-tunes a pretrained
+backbone, while <code>Train_Optimized.m</code> and <code>Train_CustomV3.m</code> train networks from
+scratch for comparison. Crucially, these scripts capture the training-history structure returned by
+<code>trainNetwork</code>, which the original code discarded. This history is what allows the pipeline
+to plot genuine <b>training-versus-validation loss and accuracy curves</b>.</p>
+<p><b>Aggregation.</b> <code>Compare_Models.m</code> scans every results folder, collects the saved
+metrics, ranks the models by validation accuracy, and writes a unified comparison table
+(<code>COMPARISON.csv</code> / <code>.txt</code>) and a bar chart. A PowerShell driver,
+<code>run_queue.ps1</code>, automates the whole backbone sweep: it launches one fresh MATLAB process
+per network, is resumable (it skips any model that already has a summary file), displays a live
+progress bar, and finishes by refreshing the comparison automatically.</p>
+
+<h2>4. Models and Methodology</h2>
+<p>The heart of the project is <b>transfer learning</b>. A network pretrained on the large ImageNet
+database already contains general-purpose visual feature detectors. Rather than learning these from
+nothing, the pipeline takes such a backbone, <b>replaces its classification head</b> with a new layer
+that outputs just two classes (configured with a tenfold learning-rate multiplier so it adapts quickly),
+and fine-tunes the entire network on the forgery data. Five backbones were benchmarked:
+<b>ResNet-18, ResNet-50, AlexNet, VGG-16, and SqueezeNet</b>. To demonstrate why pretraining matters,
+three from-scratch convolutional networks were also trained; these plateaued near 77% accuracy because
+the dataset is too small to learn strong low-level features from random initial weights.</p>
+
+<h2>5. Training Configuration and Parameters</h2>
+<p>The transfer-learning script is fully parameterised through workspace variables, so a new experiment
+needs only a one-line command:</p>
+<table>
+<tr><th>Parameter</th><th>Default</th><th>Meaning</th></tr>
+<tr><td><code>BASENET</code></td><td>resnet18</td><td>Pretrained backbone to fine-tune</td></tr>
+<tr><td><code>EPOCHS</code></td><td>12</td><td>Number of full passes over the training data</td></tr>
+<tr><td><code>LR0</code></td><td>1e-4</td><td>Initial learning rate (Adam optimiser)</td></tr>
+<tr><td><code>MBS</code></td><td>64</td><td>Mini-batch size (reduced to 24 for VGG-16 on an 8&nbsp;GB GPU)</td></tr>
+<tr><td><code>TAG</code></td><td>=BASENET</td><td>Names the output results folder</td></tr>
+</table>
+<p>Training uses the Adam optimiser with a piecewise learning-rate schedule that halves the rate
+periodically, an early-stopping validation patience, and a "best-validation-loss" checkpoint policy
+that keeps the strongest network seen during training rather than simply the final one. All training
+runs on the GPU via the automatic execution environment.</p>
+
+<h2>6. Execution Workflow</h2>
+<p>From the project directory, the typical sequence is: run Phase 1 to test the existing model; run the
+backbone sweep with <code>run_queue.ps1</code> to train and evaluate every network; and finally run
+<code>Compare_Models</code> to produce the ranked comparison. Each step writes its full console output
+to a log file and saves all figures and metrics into a per-model results folder, so every experiment is
+self-documenting and reproducible.</p>
+
+<h2>7. Results and Comparison</h2>
+<p>All numbers below are <b>honest, held-out validation results</b> on data the models never saw during
+training. Training times were measured on an NVIDIA GTX 1070 GPU.</p>
+<table>
+<tr><th>Model</th><th>Val Accuracy</th><th>Val F1</th><th>Val AUC</th><th>Training time</th></tr>
+<tr class="best"><td>Transfer ResNet-50</td><td>0.9940</td><td>0.9940</td><td>0.9999</td><td>~1 h 18 m</td></tr>
+<tr><td>Transfer ResNet-18</td><td>0.9881</td><td>0.9881</td><td>0.9996</td><td>~24 m</td></tr>
+<tr><td>Existing XONet (baseline)*</td><td>0.9849</td><td>0.9849</td><td>0.9909</td><td>&mdash;</td></tr>
+<tr><td>Transfer AlexNet</td><td>0.9748</td><td>0.9748</td><td>0.9975</td><td>~22 m</td></tr>
+<tr><td>Transfer VGG-16</td><td>0.9533</td><td>0.9532</td><td>0.9928</td><td>~8 h 20 m</td></tr>
+<tr><td>Transfer SqueezeNet (best)</td><td>0.9358</td><td>0.9358</td><td>0.9893</td><td>~18 m</td></tr>
+<tr><td>From-scratch CNN (v1)</td><td>0.7741</td><td>0.7736</td><td>0.8678</td><td>~6 m</td></tr>
+</table>
+<p class="sub">* In-sample / optimistic baseline &mdash; included for reference only.</p>
+<p>The best model is <b>Transfer ResNet-50</b>, reaching <b>99.40% validation accuracy</b> with an F1
+score of 0.9940 and an AUC of 0.9999. The clear upward trend &mdash; from 77% for a from-scratch
+network, to 93.6% for SqueezeNet, to 98.8% for ResNet-18, and finally 99.4% for ResNet-50 &mdash;
+confirms that deeper pretrained backbones combined with forgery-safe augmentation are decisively
+superior for this task. ResNet-50's residual connections let it train a deep network stably without
+the long runtime cost of VGG-16, which took over eight hours yet scored markedly lower.</p>
+
+<h2>8. Conclusion</h2>
+<p>This project converts an unreliable, leakage-affected experiment into a transparent and reproducible
+forgery-detection system. By enforcing a fixed train/validation split, capturing full training history,
+benchmarking five architectures, and reporting only honest held-out metrics, it delivers a defensible
+recommendation: a fine-tuned <b>ResNet-50</b> that detects spliced images with over 99% accuracy. All
+code, results, logs, and the smaller trained models are version-controlled and documented, allowing any
+result in this report to be regenerated end-to-end with a single command.</p>
+
+</body>
+</html>
